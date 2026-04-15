@@ -1,8 +1,26 @@
-const CROP_TYPES = ['Corn', 'Rice', 'Soybean', 'Wheat'];
+import { 
+  Leaf, 
+  Thermometer, 
+  Droplets, 
+  CloudRain,
+  Zap,
+  Microscope,
+  TrendingUp,
+  FlaskConical,
+  Beaker
+} from 'lucide-react';
+
+const CROP_TYPES = ['Cotton', 'Maize', 'Potato', 'Rice', 'Sugarcane', 'Wheat'];
 
 const defaults = {
-  Soil_pH: 6.8, Soil_Moisture: 45, Temperature_C: 27, Rainfall_mm: 300,
-  Crop_Type: 'Wheat', Fertilizer_Usage_kg: 100, Pesticide_Usage_kg: 3, Crop_Yield_ton: 2.5,
+  Soil_pH: 6.5, 
+  Soil_Moisture: 45.0, 
+  Temperature_C: 28.0, 
+  Rainfall_mm: 550.0,
+  Crop_Type: 'Rice', 
+  Fertilizer_Usage_kg: 150.0, 
+  Pesticide_Usage_kg: 2.5, 
+  Crop_Yield_ton: 3.2
 };
 
 export default function SustainabilityForm({ onSubmit, loading }) {
@@ -12,47 +30,83 @@ export default function SustainabilityForm({ onSubmit, loading }) {
     const data = Object.fromEntries(fd.entries());
     const nums = ['Soil_pH','Soil_Moisture','Temperature_C','Rainfall_mm',
                   'Fertilizer_Usage_kg','Pesticide_Usage_kg','Crop_Yield_ton'];
-    nums.forEach(k => { data[k] = parseFloat(data[k]); });
+    nums.forEach(k => { if(data[k]) data[k] = parseFloat(data[k]); });
     onSubmit(data);
   };
 
-  const Num = ({ name, min, max, step = 0.01 }) => (
-    <input className="form-input" type="number" name={name} defaultValue={defaults[name]} min={min} max={max} step={step} />
+  const FieldLabel = ({ icon: Icon, label, unit }) => (
+    <div className="field-label-wrapper">
+      <div className="label-main">
+        <Icon size={14} className="label-icon" />
+        <span className="label-text">{label}</span>
+      </div>
+      {unit && <span className="label-unit">({unit})</span>}
+    </div>
   );
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-grid">
-        <div className="form-group">
-          <label className="form-label">Crop Type</label>
-          <select className="form-select" name="Crop_Type" defaultValue={defaults.Crop_Type}>
-            {CROP_TYPES.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
+    <form onSubmit={handleSubmit} className="premium-form">
+      <div className="form-sections-grid">
+        
+        <div className="form-section">
+          <h4 className="section-title-sm">Env. Conditions</h4>
+          <div className="inputs-grid">
+             <div className="input-group">
+                <FieldLabel icon={FlaskConical} label="Soil pH" unit="pH" />
+                <input className="input-field" type="number" name="Soil_pH" defaultValue={defaults.Soil_pH} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Droplets} label="Moisture" unit="%" />
+                <input className="input-field" type="number" name="Soil_Moisture" defaultValue={defaults.Soil_Moisture} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Thermometer} label="Temp" unit="°C" />
+                <input className="input-field" type="number" name="Temperature_C" defaultValue={defaults.Temperature_C} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={CloudRain} label="Rainfall" unit="mm" />
+                <input className="input-field" type="number" name="Rainfall_mm" defaultValue={defaults.Rainfall_mm} />
+             </div>
+          </div>
         </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Soil pH</label><Num name="Soil_pH" min={3} max={11} step={0.01}/></div>
-          <div className="form-group"><label className="form-label">Soil Moisture (%)</label><Num name="Soil_Moisture" min={0} max={100}/></div>
-        </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Temperature (°C)</label><Num name="Temperature_C" min={-10} max={55}/></div>
-          <div className="form-group"><label className="form-label">Rainfall (mm)</label><Num name="Rainfall_mm" min={0} max={3000}/></div>
-        </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Fertilizer Usage (kg)</label><Num name="Fertilizer_Usage_kg" min={0} max={500}/></div>
-          <div className="form-group"><label className="form-label">Pesticide Usage (kg)</label><Num name="Pesticide_Usage_kg" min={0} max={50} step={0.01}/></div>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Crop Yield (ton)</label>
-          <Num name="Crop_Yield_ton" min={0} max={20} step={0.01}/>
+
+        <div className="form-section">
+          <h4 className="section-title-sm">Input & Output Audit</h4>
+          <div className="inputs-grid">
+             <div className="input-group">
+                <FieldLabel icon={Leaf} label="Crop Type" />
+                <select className="input-field" name="Crop_Type" defaultValue={defaults.Crop_Type}>
+                  {CROP_TYPES.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Microscope} label="Fertilizer" unit="kg" />
+                <input className="input-field" type="number" name="Fertilizer_Usage_kg" defaultValue={defaults.Fertilizer_Usage_kg} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Beaker} label="Pesticide" unit="kg" />
+                <input className="input-field" type="number" name="Pesticide_Usage_kg" defaultValue={defaults.Pesticide_Usage_kg} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={TrendingUp} label="Total Yield" unit="ton" />
+                <input className="input-field" type="number" name="Crop_Yield_ton" defaultValue={defaults.Crop_Yield_ton} step={0.1} />
+             </div>
+          </div>
         </div>
       </div>
 
-      <div className="model-chips" style={{marginTop:16}}>
-        <span className="model-chip">XGBoost</span>
-      </div>
-
-      <button className="submit-btn" type="submit" disabled={loading}>
-        {loading ? '⏳ Predicting...' : '🌱 Predict Sustainability Score'}
+      <button className="submit-btn-glow" type="submit" disabled={loading}>
+        {loading ? (
+          <div className="loader-container">
+            <div className="loader-ring" />
+            <span>Auditing Sustainability...</span>
+          </div>
+        ) : (
+          <>
+            <Zap size={18} />
+            <span>Generate Eco-Score</span>
+          </>
+        )}
       </button>
     </form>
   );

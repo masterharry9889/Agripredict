@@ -1,13 +1,21 @@
-import React from 'react';
+import { 
+  Sprout, 
+  Thermometer, 
+  Droplets, 
+  CloudRain, 
+  Zap,
+  FlaskConical,
+  Beaker
+} from 'lucide-react';
 
 const defaults = {
-  Nitrogen: 80,
-  Phosphorus: 40,
-  Potassium: 40,
-  Temperature: 25,
-  Humidity: 70,
-  pH_Value: 6.5,
-  Rainfall: 100,
+  Nitrogen: 50.0, 
+  Phosphorus: 40.0, 
+  Potassium: 35.0, 
+  Temperature: 25.5, 
+  Humidity: 70.0, 
+  pH_Value: 6.5, 
+  Rainfall: 650.0
 };
 
 export default function CropRecommendationForm({ onSubmit, loading }) {
@@ -15,57 +23,78 @@ export default function CropRecommendationForm({ onSubmit, loading }) {
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = Object.fromEntries(fd.entries());
-    
-    // Convert all fields to float
-    Object.keys(data).forEach(k => {
-      data[k] = parseFloat(data[k]);
-    });
-    
+    const nums = ['Nitrogen', 'Phosphorus', 'Potassium', 'Temperature', 'Humidity', 'pH_Value', 'Rainfall'];
+    nums.forEach(k => { if(data[k]) data[k] = parseFloat(data[k]); });
     onSubmit(data);
   };
 
-  const Num = ({ name, label, min, max, step = 0.01 }) => (
-    <div className="form-group">
-      <label className="form-label">{label}</label>
-      <input 
-        className="form-input" 
-        type="number" 
-        name={name} 
-        defaultValue={defaults[name]} 
-        min={min} 
-        max={max} 
-        step={step} 
-      />
+  const FieldLabel = ({ icon: Icon, label, unit }) => (
+    <div className="field-label-wrapper">
+      <div className="label-main">
+        <Icon size={14} className="label-icon" />
+        <span className="label-text">{label}</span>
+      </div>
+      {unit && <span className="label-unit">({unit})</span>}
     </div>
   );
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-grid">
-        <div className="form-grid-3">
-          <Num name="Nitrogen" label="Nitrogen (N)" min={0} max={200} step={1} />
-          <Num name="Phosphorus" label="Phosphorus (P)" min={0} max={200} step={1} />
-          <Num name="Potassium" label="Potassium (K)" min={0} max={200} step={1} />
-        </div>
+    <form onSubmit={handleSubmit} className="premium-form">
+      <div className="form-sections-grid">
         
-        <div className="form-grid-2">
-          <Num name="Temperature" label="Temperature (°C)" min={0} max={60} step={0.1} />
-          <Num name="Humidity" label="Humidity (%)" min={0} max={100} step={0.1} />
+        <div className="form-section">
+          <h4 className="section-title-sm">Sub-soil Chemistry (NPK)</h4>
+          <div className="inputs-grid-3">
+             <div className="input-group">
+                <FieldLabel icon={FlaskConical} label="Nitrogen" unit="N" />
+                <input className="input-field" type="number" name="Nitrogen" defaultValue={defaults.Nitrogen} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Beaker} label="Phosphorus" unit="P" />
+                <input className="input-field" type="number" name="Phosphorus" defaultValue={defaults.Phosphorus} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={FlaskConical} label="Potassium" unit="K" />
+                <input className="input-field" type="number" name="Potassium" defaultValue={defaults.Potassium} />
+             </div>
+          </div>
         </div>
-        
-        <div className="form-grid-2">
-          <Num name="pH_Value" label="pH Level" min={0} max={14} step={0.1} />
-          <Num name="Rainfall" label="Rainfall (mm)" min={0} max={1000} step={0.1} />
+
+        <div className="form-section">
+          <h4 className="section-title-sm">Env. Adaptation Specs</h4>
+          <div className="inputs-grid">
+             <div className="input-group">
+                <FieldLabel icon={Thermometer} label="Ambient Temp" unit="°C" />
+                <input className="input-field" type="number" name="Temperature" defaultValue={defaults.Temperature} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Droplets} label="Humidity" unit="%" />
+                <input className="input-field" type="number" name="Humidity" defaultValue={defaults.Humidity} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={FlaskConical} label="Soil pH" unit="pH" />
+                <input className="input-field" type="number" name="pH_Value" defaultValue={defaults.pH_Value} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={CloudRain} label="Precipitation" unit="mm" />
+                <input className="input-field" type="number" name="Rainfall" defaultValue={defaults.Rainfall} />
+             </div>
+          </div>
         </div>
       </div>
 
-      <div className="model-chips" style={{marginTop: 24}}>
-        <span className="model-chip">XGBoost Classifier</span>
-        <span className="model-chip">Label Mapping</span>
-      </div>
-
-      <button className="submit-btn" type="submit" disabled={loading}>
-        {loading ? '⏳ Analyzing Soil...' : '🌱 Get Crop Recommendation'}
+      <button className="submit-btn-glow" type="submit" disabled={loading}>
+        {loading ? (
+          <div className="loader-container">
+            <div className="loader-ring" />
+            <span>Scanning Database...</span>
+          </div>
+        ) : (
+          <>
+            <Sprout size={18} />
+            <span>Find Optimal Crop</span>
+          </>
+        )}
       </button>
     </form>
   );

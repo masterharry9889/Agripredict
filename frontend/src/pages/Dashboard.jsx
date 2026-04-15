@@ -1,8 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import axios from 'axios';
+import { 
+  Droplets, 
+  TrendingUp, 
+  DollarSign, 
+  Leaf, 
+  Search, 
+  Settings,
+  HelpCircle,
+  Activity,
+  Cpu,
+  CloudSun,
+  ShieldCheck,
+  Zap,
+  Globe
+} from 'lucide-react';
 
 import IrrigationForm from '../components/forms/IrrigationForm';
 import YieldForm from '../components/forms/YieldForm';
@@ -13,134 +28,175 @@ import ResultDisplay from '../components/ResultDisplay';
 
 const API = 'http://127.0.0.1:5000';
 
-const TABS = [
-  { id: 'irrigation',    label: 'Irrigation Need',      icon: '🌊', endpoint: '/predict/irrigation' },
-  { id: 'yield',         label: 'Crop Yield',            icon: '🌽', endpoint: '/predict/yield' },
-  { id: 'market',        label: 'Market Price',          icon: '💰', endpoint: '/predict/market' },
-  { id: 'sustainability',label: 'Sustainability Score',  icon: '🌱', endpoint: '/predict/sustainability' },
-  { id: 'crop',          label: 'Crop Recommendation',  icon: '🚜', endpoint: '/predict/crop' },
+const TOOLS = [
+  { id: 'irrigation', label: 'Irrigation', icon: <Droplets size={20} />, endpoint: '/predict/irrigation', desc: 'Forecast water requirements', tech: 'StackEnsemble-v2' },
+  { id: 'yield', label: 'Crop Yield', icon: <TrendingUp size={20} />, endpoint: '/predict/yield', desc: 'Estimate harvest potential', tech: 'Regressor-X1' },
+  { id: 'market', label: 'Market Price', icon: <DollarSign size={20} />, endpoint: '/predict/market', desc: 'Forecast commodity prices', tech: 'LSTM-Time-Series' },
+  { id: 'sustainability', label: 'Sustainability', icon: <Leaf size={20} />, endpoint: '/predict/sustainability', desc: 'Impact & resource scoring', tech: 'EcoLogic-Net' },
+  { id: 'crop', label: 'Crop Guide', icon: <Search size={20} />, endpoint: '/predict/crop', desc: 'AI-based crop selection', tech: 'RandomForest-RF2' },
 ];
 
 const FORMS = {
-  irrigation:     IrrigationForm,
-  yield:          YieldForm,
-  market:         MarketPriceForm,
+  irrigation: IrrigationForm,
+  yield: YieldForm,
+  market: MarketPriceForm,
   sustainability: SustainabilityForm,
-  crop:           CropRecommendationForm,
-};
-
-const HEADERS = {
-  irrigation:    { title: 'Irrigation Need', desc: 'Predict whether your crop requires Low, Medium, or High irrigation based on soil conditions, weather, and crop factors.', icon: '🌊' },
-  yield:         { title: 'Crop Yield',       desc: 'Estimate maize yield (kg/ha) using a 6-model stacked ensemble trained on agro-ecological and farm management data.', icon: '🌽' },
-  market:        { title: 'Market Price',     desc: 'Forecast commodity price per ton using supply, demand, competitor pricing, weather impact, and seasonal trends.', icon: '💰' },
-  sustainability:{ title: 'Sustainability Score', desc: 'Score farm sustainability from 0–100 based on soil health, chemical usage, water, and crop productivity.', icon: '🌱' },
-  crop:          { title: 'Crop Recommendation',  desc: 'Receive AI-backed suggestions for the best crop to plant based on Nitrogen, Phosphorus, Potassium, and climatic factors.', icon: '🚜' },
+  crop: CropRecommendationForm,
 };
 
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'irrigation');
-  const [results, setResults]     = useState({});
-  const [loading, setLoading]     = useState(false);
+  const [results, setResults] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && TABS.some(t => t.id === tabParam)) {
+    if (tabParam && TOOLS.some(t => t.id === tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
 
-  const handleTabChange = (id) => {
-    setActiveTab(id);
-    setSearchParams({ tab: id });
-  };
-
   const handlePredict = async (data) => {
-    const tab = TABS.find(t => t.id === activeTab);
+    const tool = TOOLS.find(t => t.id === activeTab);
     setLoading(true);
+    const id = toast.loading(`Kernel: Processing ${tool.label} analytics...`);
+    
     try {
-      const res = await axios.post(`${API}${tab.endpoint}`, data);
-      setResults(prev => ({ ...prev, [activeTab]: res.data }));
-      toast.success('Prediction complete!', { 
-        icon: tab.icon, 
-        style: { background: '#0e1812', color: '#e8f5e9', border: '1px solid rgba(74,222,128,0.3)' } 
-      });
-    } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to connect to the backend. Is Flask running on port 5000?';
-      toast.error(msg, { style: { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.3)' } });
+      const response = await axios.post(`${API}${tool.endpoint}`, data);
+      setResults(prev => ({ ...prev, [activeTab]: response.data }));
+      toast.success("Prediction complete!", { id });
+    } catch (error) {
+      console.error(error);
+      toast.error("Analysis failed. Please check inputs.", { id });
     } finally {
       setLoading(false);
     }
   };
 
-  const ActiveForm = FORMS[activeTab];
-  const header = HEADERS[activeTab];
+  const activeTool = TOOLS.find(t => t.id === activeTab) || TOOLS[0];
+  const ActiveForm = FORMS[activeTool.id];
 
   return (
     <div className="dashboard-container">
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
       
-      {/* Background gradient blobs */}
-      <div className="bg-blobs">
-        <div className="blob blob-1" />
-        <div className="blob blob-2" />
-      </div>
-
-      <section className="predict-section">
-        <div className="main-section">
-          <div className="section-header">
-            <span className="section-eyebrow">AI Dashboard</span>
-            <h2 className="section-title">Prediction Intelligence</h2>
-            <p className="section-desc">
-              Select a module and provide field data for real-time model inference.
-            </p>
+      {/* Sidebar Navigation */}
+      <aside className="sidebar">
+        <div className="sidebar-header" style={{ marginBottom: '32px', padding: '0 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--emerald-500)' }}>
+            <Cpu size={20} />
+            <span style={{ fontWeight: 800, letterSpacing: '2px', fontSize: '12px' }}>CORE ENGINE v4.2</span>
           </div>
+        </div>
 
-          <div className="tabs">
-            {TABS.map(tab => (
+        <div className="sidebar-nav">
+          <div className="sidebar-section">
+            <span className="sidebar-label">Analytics Modules</span>
+            {TOOLS.map((tool) => (
               <button
-                key={tab.id}
-                className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => handleTabChange(tab.id)}
+                key={tool.id}
+                className={`sidebar-item ${activeTab === tool.id ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab(tool.id);
+                  setSearchParams({ tab: tool.id });
+                }}
               >
-                <span>{tab.icon}</span>
-                {tab.label}
+                {tool.icon}
+                <span>{tool.label}</span>
+                {activeTab === tool.id && <motion.div layoutId="active-pill" className="active-indicator" />}
               </button>
             ))}
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-            >
-              <div className="glass-card">
-                <div className="prediction-layout">
-                  <div className="form-panel">
-                    <div className="form-panel-header">
-                      <span className="form-panel-icon">{header.icon}</span>
-                      <h3 className="form-panel-title">{header.title}</h3>
-                      <p className="form-panel-desc">{header.desc}</p>
-                    </div>
-                    <ActiveForm onSubmit={handlePredict} loading={loading} />
-                  </div>
+          <div className="sidebar-section" style={{ marginTop: 'auto' }}>
+             <div className="system-stats">
+                <div className="stat-row">
+                  <Activity size={14} color="var(--emerald-500)" />
+                  <span>Uptime: 99.9%</span>
+                </div>
+                <div className="stat-row">
+                  <Globe size={14} color="var(--emerald-500)" />
+                  <span>Region: Global</span>
+                </div>
+             </div>
+             <button className="sidebar-item"><Settings size={18} /> <span>System Control</span></button>
+             <button className="sidebar-item"><HelpCircle size={18} /> <span>Help Desk</span></button>
+          </div>
+        </div>
+      </aside>
 
-                  <div className="result-panel">
-                    <ResultDisplay
-                      type={activeTab}
-                      result={results[activeTab] || null}
-                      loading={loading}
-                    />
-                  </div>
+      {/* Main Viewport */}
+      <main className="main-view">
+        {/* Top Status Bar */}
+        <header className="dashboard-header">
+           <div className="header-status">
+              <div className="status-item">
+                <CloudSun size={18} />
+                <span>28°C Clear</span>
+              </div>
+              <div className="status-item">
+                <div className="pulse-dot" />
+                <span>Live Feed</span>
+              </div>
+           </div>
+           <div className="header-time">{currentTime}</div>
+        </header>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="view-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <span className="tech-badge">{activeTool.tech}</span>
+                <span className="security-badge"><ShieldCheck size={12} /> Secure</span>
+              </div>
+              <h1>{activeTool.label} Analysis</h1>
+              <p>{activeTool.desc}</p>
+            </div>
+
+            <div className="dashboard-content-grid">
+              <div className="form-card-wrapper">
+                <div className="corner corners-tl" />
+                <div className="corner corners-tr" />
+                <div className="corner corners-bl" />
+                <div className="corner corners-br" />
+                
+                <div className="form-container-inner">
+                  <ActiveForm onSubmit={handlePredict} loading={loading} />
                 </div>
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </section>
+
+              <div className="results-pane">
+                 {results[activeTab] ? (
+                   <ResultDisplay 
+                    result={results[activeTab]} 
+                    type={activeTab} 
+                    formData={Object.fromEntries(new FormData(document.querySelector('.premium-form')).entries())}
+                   />
+                 ) : (
+                   <div className="empty-results">
+                     <Zap size={48} className="zap-icon" />
+                     <h3>Awaiting Input Data</h3>
+                     <p>Populate the parameters and click 'Predict' to initialize the {activeTool.label} module.</p>
+                   </div>
+                 )}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </main>
     </div>
   );
 }

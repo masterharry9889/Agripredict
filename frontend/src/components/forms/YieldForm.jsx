@@ -1,11 +1,34 @@
-const ZONES   = ['arid', 'semi_arid', 'sub_humid', 'humid', 'highland'];
-const REGIONS = ['rural_remote', 'rural_accessible', 'peri_urban', 'urban'];
+import { 
+  Sprout, 
+  MapPin, 
+  Map,
+  Users,
+  Compass,
+  Tractor,
+  PhoneCall,
+  Microscope,
+  Droplets,
+  CloudRain,
+  Zap,
+  Waves,
+  Activity
+} from 'lucide-react';
+
+const AE_ZONES = ['Arid', 'Semi-Arid', 'Sub-Humid', 'Humid'];
+const REGION_TYPES = ['Rural', 'Peri-Urban', 'Urban'];
 
 const defaults = {
-  agro_ecological_zone: 'semi_arid', region_type: 'rural_accessible',
-  farm_size_ha: 1.5, soil_quality_index: 45, rainfall_mm_annual: 700,
-  household_size: 4, market_distance_km: 10, livestock_tlu: 5,
-  extension_access: 'yes', fertilizer_use_kg_ha: 50, rainfall_mm_season: 350,
+  agro_ecological_zone: 'Semi-Arid', 
+  region_type: 'Rural', 
+  farm_size_ha: 2.5,
+  soil_quality_index: 75.0, 
+  rainfall_mm_annual: 1200, 
+  household_size: 5,
+  market_distance_km: 12.0, 
+  livestock_tlu: 3.5, 
+  extension_access: 1,
+  fertilizer_use_kg_ha: 150.0, 
+  rainfall_mm_season: 450.0
 };
 
 export default function YieldForm({ onSubmit, loading }) {
@@ -13,64 +36,109 @@ export default function YieldForm({ onSubmit, loading }) {
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = Object.fromEntries(fd.entries());
-    const nums = ['farm_size_ha','soil_quality_index','rainfall_mm_annual',
-                  'household_size','market_distance_km','livestock_tlu',
+    const nums = ['farm_size_ha','soil_quality_index','rainfall_mm_annual','household_size',
+                  'market_distance_km','livestock_tlu','extension_access',
                   'fertilizer_use_kg_ha','rainfall_mm_season'];
     nums.forEach(k => { data[k] = parseFloat(data[k]); });
     onSubmit(data);
   };
 
-  const Sel = ({ name, options }) => (
-    <select className="form-select" name={name} defaultValue={defaults[name]}>
-      {options.map(o => <option key={o} value={o}>{o.replace('_', ' ')}</option>)}
-    </select>
-  );
-
-  const Num = ({ name, min, max, step = 0.01 }) => (
-    <input className="form-input" type="number" name={name} defaultValue={defaults[name]} min={min} max={max} step={step} />
+  const FieldLabel = ({ icon: Icon, label, unit }) => (
+    <div className="field-label-wrapper">
+      <div className="label-main">
+        <Icon size={14} className="label-icon" />
+        <span className="label-text">{label}</span>
+      </div>
+      {unit && <span className="label-unit">({unit})</span>}
+    </div>
   );
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-grid">
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Agro-Ecological Zone</label><Sel name="agro_ecological_zone" options={ZONES}/></div>
-          <div className="form-group"><label className="form-label">Region Type</label><Sel name="region_type" options={REGIONS}/></div>
+    <form onSubmit={handleSubmit} className="premium-form">
+      <div className="form-sections-grid">
+        
+        <div className="form-section">
+          <h4 className="section-title-sm">Geographic & Demographic</h4>
+          <div className="inputs-grid">
+             <div className="input-group">
+                <FieldLabel icon={Map} label="Eco Zone" />
+                <select className="input-field" name="agro_ecological_zone" defaultValue={defaults.agro_ecological_zone}>
+                  {AE_ZONES.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={MapPin} label="Region Type" />
+                <select className="input-field" name="region_type" defaultValue={defaults.region_type}>
+                  {REGION_TYPES.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Users} label="Family Size" />
+                <input className="input-field" type="number" name="household_size" defaultValue={defaults.household_size} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Compass} label="Market Dist." unit="km" />
+                <input className="input-field" type="number" name="market_distance_km" defaultValue={defaults.market_distance_km} step={0.1} />
+             </div>
+          </div>
         </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Farm Size (ha)</label><Num name="farm_size_ha" min={0.1} max={100} step={0.1}/></div>
-          <div className="form-group"><label className="form-label">Soil Quality Index</label><Num name="soil_quality_index" min={0} max={100} step={0.1}/></div>
+
+        <div className="form-section">
+          <h4 className="section-title-sm">Farm & Soil Profile</h4>
+          <div className="inputs-grid">
+             <div className="input-group">
+                <FieldLabel icon={MapPin} label="Farm Size" unit="ha" />
+                <input className="input-field" type="number" name="farm_size_ha" defaultValue={defaults.farm_size_ha} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Activity} label="Soil Quality" unit="0-100" />
+                <input className="input-field" type="number" name="soil_quality_index" defaultValue={defaults.soil_quality_index} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Tractor} label="Livestock" unit="TLU" />
+                <input className="input-field" type="number" name="livestock_tlu" defaultValue={defaults.livestock_tlu} step={0.1} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={PhoneCall} label="Ext. Access" unit="0/1" />
+                <select className="input-field" name="extension_access" defaultValue={defaults.extension_access}>
+                  <option value={0}>No Access</option>
+                  <option value={1}>Full Access</option>
+                </select>
+             </div>
+          </div>
         </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Annual Rainfall (mm)</label><Num name="rainfall_mm_annual" min={0} max={4000}/></div>
-          <div className="form-group"><label className="form-label">Seasonal Rainfall (mm)</label><Num name="rainfall_mm_season" min={0} max={2000}/></div>
-        </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Household Size</label><Num name="household_size" min={1} max={20} step={1}/></div>
-          <div className="form-group"><label className="form-label">Market Distance (km)</label><Num name="market_distance_km" min={0} max={200} step={0.1}/></div>
-        </div>
-        <div className="form-grid form-grid-2">
-          <div className="form-group"><label className="form-label">Livestock (TLU)</label><Num name="livestock_tlu" min={0} max={100} step={0.1}/></div>
-          <div className="form-group"><label className="form-label">Fertilizer (kg/ha)</label><Num name="fertilizer_use_kg_ha" min={0} max={500}/></div>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Extension Access</label>
-          <Sel name="extension_access" options={['yes','no']}/>
+
+        <div className="form-section">
+          <h4 className="section-title-sm">Hydro & Inputs</h4>
+          <div className="inputs-grid-3">
+             <div className="input-group">
+                <FieldLabel icon={CloudRain} label="Annual Rain" unit="mm" />
+                <input className="input-field" type="number" name="rainfall_mm_annual" defaultValue={defaults.rainfall_mm_annual} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Waves} label="Season Rain" unit="mm" />
+                <input className="input-field" type="number" name="rainfall_mm_season" defaultValue={defaults.rainfall_mm_season} />
+             </div>
+             <div className="input-group">
+                <FieldLabel icon={Microscope} label="Fertilizer" unit="kg/ha" />
+                <input className="input-field" type="number" name="fertilizer_use_kg_ha" defaultValue={defaults.fertilizer_use_kg_ha} />
+             </div>
+          </div>
         </div>
       </div>
 
-      <div className="model-chips" style={{marginTop:16}}>
-        <span className="model-chip">Linear</span>
-        <span className="model-chip">MLP</span>
-        <span className="model-chip">SVR</span>
-        <span className="model-chip">Decision Tree</span>
-        <span className="model-chip">Random Forest</span>
-        <span className="model-chip">XGBoost</span>
-        <span className="model-chip">Stacked Ensemble</span>
-      </div>
-
-      <button className="submit-btn" type="submit" disabled={loading}>
-        {loading ? '⏳ Predicting...' : '🌽 Predict Crop Yield'}
+      <button className="submit-btn-glow" type="submit" disabled={loading}>
+        {loading ? (
+          <div className="loader-container">
+            <div className="loader-ring" />
+            <span>Calculating Yield...</span>
+          </div>
+        ) : (
+          <>
+            <Zap size={18} />
+            <span>Generate Forecast</span>
+          </>
+        )}
       </button>
     </form>
   );
