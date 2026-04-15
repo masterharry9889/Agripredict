@@ -80,7 +80,7 @@ export default function HeroSection({ onExplore }) {
 
       <div ref={statsRef} className="hero-stats">
         <div className="hero-stat">
-          <span className="hero-stat-value">4</span>
+          <span className="hero-stat-value">5</span>
           <span className="hero-stat-label">ML Models</span>
         </div>
         <div className="hero-stat">
@@ -93,8 +93,8 @@ export default function HeroSection({ onExplore }) {
         </div>
       </div>
 
-      <a ref={ctaRef} href="#predict" className="hero-cta" style={{ opacity: 0 }} onClick={onExplore}>
-        ↓ Start Predicting
+      <a ref={ctaRef} href="#features" className="hero-cta" style={{ opacity: 0 }} onClick={onExplore}>
+        ↓ Explore AI Tools
       </a>
 
       <div className="hero-scroll">

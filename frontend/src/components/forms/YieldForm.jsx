@@ -1,5 +1,5 @@
 const ZONES   = ['arid', 'semi_arid', 'sub_humid', 'humid', 'highland'];
-const REGIONS = ['rural_remote', 'rural_accessible', 'urban'];
+const REGIONS = ['rural_remote', 'rural_accessible', 'peri_urban', 'urban'];
 
 const defaults = {
   agro_ecological_zone: 'semi_arid', region_type: 'rural_accessible',

@@ -128,6 +128,50 @@ function SustainabilityResult({ result }) {
   );
 }
 
+// ── Crop Recommendation ───────────────────────────────────────────────────────
+function CropResult({ result }) {
+  const crop = result.prediction || 'Unknown';
+  const suggestions = result.top_suggestions || [];
+
+  return (
+    <div className="result-content">
+      <p className="result-label">🌱 Recommended Crop</p>
+      <div className="classification-result">
+        <span className="classification-value" style={{ color: '#4ade80', textTransform: 'capitalize' }}>
+          {crop}
+        </span>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 8 }}>
+          Best suited for your land conditions
+        </p>
+      </div>
+
+      {suggestions.length > 0 && (
+        <div className="proba-bars">
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+            Alternative Suggestions
+          </p>
+          {suggestions.map((item, idx) => (
+            <div key={idx} className="proba-bar-row">
+              <span className="proba-bar-label" style={{ textTransform: 'capitalize' }}>{item.crop}</span>
+              <div className="proba-bar-track">
+                <div
+                  className="proba-bar-fill"
+                  style={{ width: `${item.confidence}%`, background: 'var(--green-400)' }}
+                />
+              </div>
+              <span className="proba-bar-pct">{item.confidence}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="result-meta" style={{ marginTop: 24 }}>
+        <strong>XGBoost Classifier</strong> — Analyzes NPK values, temperature, humidity, pH, and rainfall to select from 22 possible crops.
+      </div>
+    </div>
+  );
+}
+
 // ── Loading ───────────────────────────────────────────────────────────────────
 function LoadingState() {
   return (
@@ -150,16 +194,17 @@ function EmptyState({ icon, label }) {
 
 // ── Main Export ───────────────────────────────────────────────────────────────
 export default function ResultDisplay({ type, result, loading }) {
-  const icons = { irrigation: '🌊', yield: '🌽', market: '💰', sustainability: '🌱' };
+  const icons = { irrigation: '🌊', yield: '🌽', market: '💰', sustainability: '🌱', crop: '🚜' };
 
   if (loading) return <LoadingState />;
   if (!result)  return <EmptyState icon={icons[type]} />;
 
   const components = {
-    irrigation:    <IrrigationResult    result={result} />,
-    yield:         <YieldResult         result={result} />,
-    market:        <MarketPriceResult   result={result} />,
+    irrigation:     <IrrigationResult    result={result} />,
+    yield:          <YieldResult         result={result} />,
+    market:         <MarketPriceResult   result={result} />,
     sustainability: <SustainabilityResult result={result} />,
+    crop:           <CropResult           result={result} />,
   };
 
   return (

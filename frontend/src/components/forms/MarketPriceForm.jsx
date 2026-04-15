@@ -1,4 +1,4 @@
-const PRODUCTS   = ['Barley', 'Coffee', 'Maize', 'Rice', 'Sorghum', 'Soybean', 'Sugarcane', 'Tea', 'Wheat'];
+const PRODUCTS   = ['Corn', 'Rice', 'Soybean', 'Wheat'];
 const SEASONALS  = ['High', 'Low', 'Medium'];
 
 const defaults = {

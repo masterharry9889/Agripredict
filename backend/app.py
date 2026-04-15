@@ -18,6 +18,7 @@ MODEL_PATHS = {
     "yield":      os.path.join(PARENT, "Yield",           "stack_Yield_model.joblib"),
     "market":     os.path.join(PARENT, "market_price",    "xgb_market_price.pkl"),
     "sustain":    os.path.join(PARENT, "Sustainability_score", "xgb_sustainable_score.pkl"),
+    "crop":       os.path.join(PARENT, "Crop_recomendation",    "crop_recommendation.pkl"),
 }
 
 # ─── Load models once at startup ─────────────────────────────────────────────
@@ -199,6 +200,65 @@ def predict_sustainability():
         pred = float(model.predict(df)[0])
         pred = max(0.0, min(100.0, pred))  # clamp to [0, 100]
         return jsonify({"prediction": round(pred, 2), "unit": "score (0-100)"})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return err(f"Prediction error: {str(e)}", 500)
+
+
+# ─── Endpoint 5: Crop Recommendation ──────────────────────────────────────────
+@app.route("/predict/crop", methods=["POST"])
+def predict_crop():
+    data = request.get_json(force=True)
+    print(f"--- POST /predict/crop ---")
+    print(f"  Input: {data}")
+    
+    # Map Nitrogen, Phosphorus, Potassium to the model's preferred names if necessary
+    # The model expects: Nitrogen, Phosphorus, Potassium, Temperature, Humidity, pH_Value, Rainfall
+    required = ["Nitrogen", "Phosphorus", "Potassium", "Temperature", "Humidity", "pH_Value", "Rainfall"]
+    
+    missing = [k for k in required if k not in data]
+    if missing:
+        return err(f"Missing fields: {missing}")
+
+    try:
+        model = models["crop"]
+        # Convert numbers to float just in case
+        for k in required:
+            data[k] = float(data[k])
+            
+        expected_features = list(model.feature_names_in_)
+        df = prepare_features(data, expected_features, "crop")
+        
+        pred_idx = int(model.predict(df)[0])
+        
+        # Standard Kaggle Crop Dataset Mapping
+        crops = {
+            0: 'apple', 1: 'banana', 2: 'blackgram', 3: 'chickpea', 4: 'coconut',
+            5: 'coffee', 6: 'cotton', 7: 'grapes', 8: 'jute', 9: 'kidneybeans',
+            10: 'lentil', 11: 'maize', 12: 'mango', 13: 'mothbeans', 14: 'mungbean',
+            15: 'muskmelon', 16: 'orange', 17: 'papaya', 18: 'pigeonpeas',
+            19: 'pomegranate', 20: 'rice', 21: 'watermelon'
+        }
+        
+        crop_name = crops.get(pred_idx, "Unknown")
+        
+        # Get probabilities if possible
+        top_3 = []
+        if hasattr(model, "predict_proba"):
+            probs = model.predict_proba(df)[0]
+            top_indices = np.argsort(probs)[-3:][::-1]
+            for idx in top_indices:
+                top_3.append({
+                    "crop": crops.get(idx, "Unknown"),
+                    "confidence": float(round(probs[idx] * 100, 1))
+                })
+
+        return jsonify({
+            "prediction": crop_name,
+            "top_suggestions": top_3,
+            "id": pred_idx
+        })
     except Exception as e:
         import traceback
         traceback.print_exc()

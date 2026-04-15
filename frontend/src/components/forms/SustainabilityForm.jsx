@@ -1,4 +1,4 @@
-const CROP_TYPES = ['Barley', 'Cotton', 'Maize', 'Potato', 'Rice', 'Soybean', 'Sugarcane', 'Wheat'];
+const CROP_TYPES = ['Corn', 'Rice', 'Soybean', 'Wheat'];
 
 const defaults = {
   Soil_pH: 6.8, Soil_Moisture: 45, Temperature_C: 27, Rainfall_mm: 300,
